@@ -1,0 +1,99 @@
+$fadeWhite: rgb(250, 250, 250);
+
+.App {
+  height: 100vh;
+  position: relative;
+  // background: hsl(0, 0%, 98%);
+  // background-image: url(../public/bg-mobile-light.jpg);
+  // background-position: top center;
+  // background-size: 100%;
+  // background-repeat: no-repeat;
+}
+.createInput {
+  flex: 1;
+  padding: 1.2rem 1rem;
+  border: none;
+  outline: none;
+  &::placeholder {
+    color: hsl(236, 9%, 61%);
+  }
+}
+.checkbox {
+  cursor: pointer;
+  width: 1.5rem;
+  aspect-ratio: 1;
+  border: 1px solid hsl(233, 11%, 84%);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.checkbox_active {
+  background: linear-gradient(
+    to right bottom,
+    hsl(192, 100%, 67%),
+    hsl(280, 87%, 65%)
+  );
+}
+
+.todos {
+  width: 100%;
+  min-height: 5rem;
+  background: $fadeWhite;
+  margin-top: 1.5rem;
+  border-radius: 5px;
+  .todo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid hsl(236, 33%, 92%);
+    .todo_left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding-right: 0.5rem;
+      .todo_text {
+        font-size: 0.9rem;
+        color: hsl(235, 19%, 35%);
+      }
+    }
+    .close_Btn {
+      cursor: pointer;
+      scale: 0.8;
+    }
+  }
+  .items_info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 1.5rem;
+    font-size: 0.9rem;
+    color: hsl(236, 9%, 61%);
+    .right {
+      cursor: pointer;
+      display: block;
+    }
+  }
+}
+
+.Drag_msg {
+  margin-top: 3rem;
+  // margin: auto;
+  text-align: center;
+  font-size: .9rem;
+  color: hsl(236, 9%, 61%);
+}
+
+.todo_menu{
+  span{
+    cursor: pointer;
+    font-size: .9rem;
+    font-weight: 700;
+    color: hsl(236, 9%, 61%);
+  }
+  .link_active{
+    color: hsl(220, 98%, 61%);
+  }
+}
