@@ -88,6 +88,11 @@
   color: #484b6a;
 }
 
+.todos .todo .todo_left .complete {
+  text-decoration: line-through;
+  color: #d2d3db;
+}
+
 .todos .todo .close_Btn {
   cursor: pointer;
   scale: 0.8;

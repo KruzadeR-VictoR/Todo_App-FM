@@ -58,6 +58,10 @@ $fadeWhite: rgb(250, 250, 250);
         font-size: 0.9rem;
         color: hsl(235, 19%, 35%);
       }
+      .complete{
+        text-decoration: line-through;
+        color: hsl(233, 11%, 84%);
+      }
     }
     .close_Btn {
       cursor: pointer;
