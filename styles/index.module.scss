@@ -8,6 +8,17 @@ $fadeWhite: rgb(250, 250, 250);
   // background-position: top center;
   // background-size: 100%;
   // background-repeat: no-repeat;
+  // background: teal;  
+  // &::after{
+  //   content: '';
+  //   position: absolute;    
+  //   height: 15rem;
+  //   width: 100%;
+  //   top: 0;
+  //   left: 0;
+  //   background:url('../public/bg-desktop-light.jpg');
+  //   z-index: -1;
+  // }
 }
 .createInput {
   flex: 1;
@@ -85,6 +96,7 @@ $fadeWhite: rgb(250, 250, 250);
 .Drag_msg {
   margin-top: 3rem;
   // margin: auto;
+  padding-bottom: 2rem;
   text-align: center;
   font-size: .9rem;
   color: hsl(236, 9%, 61%);

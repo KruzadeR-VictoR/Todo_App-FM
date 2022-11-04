@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import Head from "next/head";
 import Image from "next/image";
 import style from "../styles/index.module.css";
 import moon from "../public/icon-moon.svg";
-import bgLight from "../public/bg-mobile-light.jpg";
+import sun from "../public/icon-sun.svg";
+import bgLightMobile from "../public/bg-mobile-light.jpg";
+import bgLightDesktop from "../public/bg-desktop-light.jpg";
 import check from "../public/icon-check.svg";
 import close from "../public/icon-cross.svg";
 import Stack from "@mui/material/Stack";
@@ -12,6 +14,8 @@ import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import Checkbox from "@mui/material/Checkbox";
 import TextField from "@mui/material/TextField";
+import { ThemeContext } from "./_app";
+import { elementAcceptingRef } from "@mui/utils";
 
 type Todo = {
   id: number;
@@ -20,10 +24,11 @@ type Todo = {
 };
 
 export default function Home() {
+  const { Theme, setTheme } = useContext(ThemeContext);
   const [isActive, setisActive] = useState(false);
   const [TodoMenu, setTodoMenu] = useState("All");
   const [isComplete, setisComplete] = useState(false);
-  // const [Screen, setScreen] = useState(window)
+  const [Screen, setScreen] = useState<number>();
   const [Todos, setTodos] = useState<Todo[]>([
     {
       id: 1,
@@ -70,6 +75,12 @@ export default function Home() {
     setCurrent(Todos);
   }, [Todos]);
 
+  useEffect(() => {
+    window.addEventListener("resize", () => {
+      setScreen(window.innerWidth);
+    });
+  }, []);
+
   const handleCheckbox = (e: any, index: any) => {
     setisActive((prev) => !prev);
     console.log(Todos);
@@ -98,16 +109,17 @@ export default function Home() {
   //> handle Completed Todos
 
   useEffect(() => {
-    console.log(CompletedTodos);
-  });
+    setCompletedTodos(CompletedTodos);
+  }, [CompletedTodos]);
 
   const handleCompleted = () => {
+    setisActive((prev) => !prev);
     setTodoMenu("Completed");
     const complete = Todos.filter((item) => {
       return item.isComplete == true;
     });
     setCompletedTodos(complete);
-    setCurrent(complete);
+    // setCurrent(complete);
   };
   //> handle Active Todos
   const handleActive = () => {
@@ -119,25 +131,47 @@ export default function Home() {
     setCurrent(complete);
   };
 
-  useEffect(() => {
-    console.log(CompletedTodos);
-  }, [CompletedTodos]);
-
   //> Clear Completed todos
 
   const clearCompleted = () => {
-    // setisActive((prev) => !prev);
+    setisActive((prev) => !prev);
+    //< Trick to clear completedtodos while in complete tab
+    setCompletedTodos([]);
     setTodos(
       Todos.filter((item, index) => {
         return item.isComplete !== true;
       })
-    );    
+    );
+  };
+
+  // Create a Todo Input
+  const handleInput = (e: any) => {
+    const newTodo = [...Todos];
+    if (e.key == "Enter") {
+      const neww = {
+        id: Todos.length + 1,
+        text: e.target.value,
+        isComplete: isComplete,
+      };
+      newTodo.unshift(neww);
+      setTodos(newTodo);
+      // setTodos({id:1,text:'hello',isComplete:false},...Todos)
+    }
+    // setTodos({7,'ok',false})
+  };
+
+  //< handle Theme change
+
+  const handleTheme = () => {
+    if (Theme == "light") {
+      setTheme("dark");
+    } else setTheme("light");
   };
 
   return (
     <main className={style.App}>
       <Image
-        src={bgLight}
+        src={Screen && Screen <= 600 ? bgLightMobile : bgLightDesktop}
         alt="bg-light"
         style={{
           width: "100%",
@@ -148,8 +182,14 @@ export default function Home() {
           objectFit: "cover",
           zIndex: "-1",
         }}
-      />
-      <Container sx={{ width: "90%", margin: "auto" }}>
+      />      
+      <Container
+        sx={{
+          width: "90%",
+          maxWidth: "40rem !important",
+          margin: "auto",                
+        }}
+      >
         <Stack
           direction="row"
           sx={{
@@ -165,7 +205,12 @@ export default function Home() {
           >
             TODO
           </Typography>
-          <Image src={moon} alt="moon" />
+          <Image
+            style={{ cursor: "pointer" }}
+            src={Theme == "light" ? moon : sun}
+            alt="moon"
+            onClick={handleTheme}
+          />
         </Stack>
         {/* Create a new todo input box  */}
         <Stack
@@ -184,6 +229,7 @@ export default function Home() {
             className={style.createInput}
             type="text"
             placeholder="Create a new todo..."
+            onKeyUp={(e) => handleInput(e)}
           />
         </Stack>
         {/* All Todos  */}
@@ -267,7 +313,7 @@ export default function Home() {
             </span>
           </div>
         </Box>
-
+        {/* TodosMenu Tabs  */}
         <Stack
           className={style.todo_menu}
           direction="row"
@@ -302,7 +348,7 @@ export default function Home() {
           </span>
         </Stack>
         <p className={style.Drag_msg}>Drag and drop to reorder list</p>
-      </Container>
+      </Container>      
     </main>
   );
 }
