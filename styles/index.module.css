@@ -53,7 +53,6 @@
 .todos {
   width: 100%;
   min-height: 5rem;
-  background: #fafafa;
   margin-top: 1.5rem;
   border-radius: 5px;
 }
@@ -134,6 +133,6 @@
 }
 
 .todo_menu .link_active {
-  color: #3a7bfd;
+  color: #3a7bfd !important;
 }
 /*# sourceMappingURL=index.module.css.map */

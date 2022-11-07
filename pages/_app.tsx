@@ -14,44 +14,44 @@ export default function App({ Component, pageProps }: AppProps) {
     Theme: Theme,
     setTheme: setTheme,
   };
-  // const darktheme = createTheme({
-  //   palette: {
-  //     mode: Theme,
-  //     ...(Theme === "light"
-  //       ? {
-  //           primary: {
-  //             main: "hsl(220, 98%, 61%)",
-  //           },
-  //           background: {
-  //             paper: "",
-  //             default:'transparent'
-  //           },
-  //           text: {
-  //             primary: "#fafafa",
-  //           },
-  //         }
-  //       : {
-  //           primary: {
-  //             main: "hsl(220, 98%, 61%)",
-  //           },
-  //           background: {
-  //             paper: "hsl(233, 11%, 84%)",
-  //             default:'transparent'
-  //           },
-  //           text: {
-  //             primary: "#fafafa",
-  //           },
-  //         }),
-  //   },
-  // });
+  const darktheme = createTheme({
+    palette: {
+      mode: Theme,
+      ...(Theme === "light"
+        ? {
+            primary: {
+              main: "hsl(233, 11%, 84%)",
+            },
+            background: {              
+              paper: "teal",
+              default:'hsl(235, 21%, 11%)'
+            },
+            text: {
+              primary: "red",
+            },
+          }
+        : {
+            primary: {
+              main: "hsl(220, 98%, 61%)",
+            },
+            background: {
+              paper: "hsl(233, 11%, 84%)",
+              default:'hsl(233, 11%, 84%)'
+            },
+            text: {
+              primary: "#fafafa",              
+            },
+          }),
+    },
+  });
   return (
-    // <ThemeProvider theme={darktheme}>
+    <ThemeProvider theme={darktheme}>
       <ThemeContext.Provider value={values}>
-        {/* <CssBaseline /> */}
+        <CssBaseline />
         {/* <Paper> */}
           <Component {...pageProps} />
         {/* </Paper> */}
       </ThemeContext.Provider>
-    //  </ThemeProvider>
+     </ThemeProvider>
   );
 }

@@ -12,12 +12,13 @@ $fadeWhite: rgb(250, 250, 250);
   // &::after{
   //   content: '';
   //   position: absolute;    
-  //   height: 15rem;
+  //   height: 100%;
   //   width: 100%;
   //   top: 0;
   //   left: 0;
-  //   background:url('../public/bg-desktop-light.jpg');
-  //   z-index: -1;
+  //   // background:url('../public/bg-desktop-light.jpg');
+  //   background: red;
+    // z-index: -5;
   // }
 }
 .createInput {
@@ -51,7 +52,7 @@ $fadeWhite: rgb(250, 250, 250);
 .todos {
   width: 100%;
   min-height: 5rem;
-  background: $fadeWhite;
+  // background: $fadeWhite;
   margin-top: 1.5rem;
   border-radius: 5px;
   .todo {
@@ -110,6 +111,6 @@ $fadeWhite: rgb(250, 250, 250);
     color: hsl(236, 9%, 61%);
   }
   .link_active{
-    color: hsl(220, 98%, 61%);
+    color: hsl(220, 98%, 61%) !important;
   }
 }
