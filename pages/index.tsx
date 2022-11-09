@@ -17,6 +17,12 @@ import TextField from "@mui/material/TextField";
 import { ThemeContext } from "./_app";
 import { elementAcceptingRef } from "@mui/utils";
 import { Paper } from "@mui/material";
+import {
+  DragDropContext,
+  Draggable,
+  Droppable,
+  resetServerContext,
+} from "react-beautiful-dnd";
 
 type Todo = {
   id: number;
@@ -77,6 +83,7 @@ export default function Home() {
   }, [Todos]);
 
   useEffect(() => {
+    resetServerContext();
     window.addEventListener("resize", () => {
       setScreen(window.innerWidth);
     });
@@ -171,6 +178,17 @@ export default function Home() {
     }
   };
 
+  //> handle DragEnd
+
+  const handleDragEnd = (result: any) => {
+    console.log(result);
+    if (!result.destination) return;
+    const items = Array.from(Todos);
+    const [reorderData] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderData);
+    setTodos(items);
+  };
+
   return (
     <>
       <Image
@@ -233,11 +251,14 @@ export default function Home() {
                 : { background: "rgb(250, 250, 250)" }
             }
           >
-            <div className={`${style.checkbox}`} style={
-                          Theme == "light"
-                            ? { border:' 1px solid hsl(237, 14%, 26%)' }
-                            : { border:' 1px solid hsl(233, 11%, 84%)' }
-                        }></div>
+            <div
+              className={`${style.checkbox}`}
+              style={
+                Theme == "light"
+                  ? { border: " 1px solid hsl(237, 14%, 26%)" }
+                  : { border: " 1px solid hsl(233, 11%, 84%)" }
+              }
+            ></div>
             <input
               className={style.createInput}
               type="text"
@@ -245,141 +266,187 @@ export default function Home() {
               onKeyUp={(e) => handleInput(e)}
               style={
                 Theme == "light"
-                  ? { background: "hsl(235, 24%, 19%)",color:'hsl(236, 33%, 92%)' }
+                  ? {
+                      background: "hsl(235, 24%, 19%)",
+                      color: "hsl(236, 33%, 92%)",
+                    }
                   : { background: "rgb(250, 250, 250)" }
               }
             />
           </Stack>
           {/* All Todos  */}
-          <Box
-            className={style.todos}
-            style={
-              Theme == "light"
-                ? { background: "hsl(235, 24%, 19%)" }
-                : { background: "rgb(250, 250, 250)" }
-            }
-            ref={todoref}
-          >
-            {TodoMenu == "Completed" ? (
-              <>
-                {CompletedTodos.map((todo, index) => (
-                  <div
-                    key={todo.id}
-                    className={style.todo}
-                    style={
-                      Theme == "light"
-                        ? { borderBottom: " 1px solid hsl(237, 14%, 26%)" }
-                        : { borderBottom: " 1px solid hsl(236, 33%, 92%)" }
-                    }
-                  >
-                    <div className={style.todo_left}>
-                      <div
-                        className={`${
-                          todo.isComplete
-                            ? `${style.checkbox} ${style.checkbox_active}`
-                            : `${style.checkbox}`
-                        }`}
-                        style={
-                          Theme == "light"
-                            ? { border:' 1px solid hsl(237, 14%, 26%)' }
-                            : { border:' 1px solid hsl(233, 11%, 84%)' }
-                        }
-                        onClick={(e) => handleCheckbox(e, index)}
-                      >
-                        {todo.isComplete && <Image src={check} alt="check" />}
-                      </div>
-                      <span
-                        className={`${
-                          todo.isComplete
-                            ? `${style.todo_text} ${style.complete}`
-                            : `${style.todo_text}`
-                        }`}
-                      >
-                        {todo.text}
-                      </span>
-                    </div>
-                    <Image
-                      className={style.close_Btn}
-                      src={close}
-                      alt="close"
-                      onClick={(e) => handleClose(e, index)}
-                    />
-                  </div>
-                ))}
-              </>
-            ) : (
-              <>
-                {Current.map((todo, index) => (
-                  <div
-                    key={todo.id}
-                    className={style.todo}
-                    style={
-                      Theme == "light"
-                        ? { borderBottom: " 1px solid hsl(237, 14%, 26%)" }
-                        : { borderBottom: " 1px solid hsl(236, 33%, 92%)" }
-                    }
-                  >
-                    <div className={style.todo_left}>
-                      <div
-                        className={`${
-                          todo.isComplete
-                            ? `${style.checkbox} ${style.checkbox_active}`
-                            : `${style.checkbox}`
-                        }`}
-                        style={
-                          Theme == "light"
-                            ? { border:' 1px solid hsl(237, 14%, 26%)' }
-                            : { border:' 1px solid hsl(233, 11%, 84%)' }
-                        }
-                        onClick={(e) => handleCheckbox(e, index)}
-                      >
-                        {todo.isComplete && <Image src={check} alt="check" />}
-                      </div>
-                      <span
-                        className={`${
-                          todo.isComplete
-                            ? `${style.todo_text} ${style.complete}`
-                            : `${style.todo_text}`
-                        }`}
-                        style={
-                          Theme == "light"
-                            ? { color:'hsl(236, 33%, 92%)' }
-                            : { color:'hsl(235, 19%, 35%)' }
-                        }
-                      >
-                        {todo.text}
-                      </span>
-                    </div>
-                    <Image
-                      className={style.close_Btn}
-                      src={close}
-                      alt="close"
-                      onClick={(e) => handleClose(e, index)}
-                    />
-                  </div>
-                ))}
-              </>
-            )}
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="droppable">
+              {(provided) => (
+                <Box
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className={style.todos}
+                  style={
+                    Theme == "light"
+                      ? { background: "hsl(235, 24%, 19%)" }
+                      : { background: "rgb(250, 250, 250)" }
+                  }
+                >
+                  {TodoMenu == "Completed" ? (
+                    <>
+                      {CompletedTodos.map((todo, index) => (
+                        <div
+                          key={todo.id}
+                          className={style.todo}
+                          style={
+                            Theme == "light"
+                              ? {
+                                  borderBottom: " 1px solid hsl(237, 14%, 26%)",
+                                }
+                              : {
+                                  borderBottom: " 1px solid hsl(236, 33%, 92%)",
+                                }
+                          }
+                        >
+                          <div className={style.todo_left}>
+                            <div
+                              className={`${
+                                todo.isComplete
+                                  ? `${style.checkbox} ${style.checkbox_active}`
+                                  : `${style.checkbox}`
+                              }`}
+                              style={
+                                Theme == "light"
+                                  ? { border: " 1px solid hsl(237, 14%, 26%)" }
+                                  : { border: " 1px solid hsl(233, 11%, 84%)" }
+                              }
+                              onClick={(e) => handleCheckbox(e, index)}
+                            >
+                              {todo.isComplete && (
+                                <Image src={check} alt="check" />
+                              )}
+                            </div>
+                            <span
+                              className={`${
+                                todo.isComplete
+                                  ? `${style.todo_text} ${style.complete}`
+                                  : `${style.todo_text}`
+                              }`}
+                            >
+                              {todo.text}
+                            </span>
+                          </div>
+                          <Image
+                            className={style.close_Btn}
+                            src={close}
+                            alt="close"
+                            onClick={(e) => handleClose(e, index)}
+                          />
+                        </div>
+                      ))}
+                    </>
+                  ) : (
+                    <>
+                      {Current.map((todo, index) => (
+                        <Draggable
+                          key={todo.id}
+                          draggableId={todo.id.toString()}
+                          index={index}
+                        >
+                          {(provided) => (
+                            <div
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              ref={provided.innerRef}
+                              className={style.todo}
+                              style={
+                                Theme == "light"
+                                  ? {
+                                      borderBottom:
+                                        " 1px solid hsl(237, 14%, 26%)",
+                                    }
+                                  : {
+                                      borderBottom:
+                                        " 1px solid hsl(236, 33%, 92%)",
+                                    }
+                              }
+                            >
+                              <div className={style.todo_left}>
+                                <div
+                                  className={`${
+                                    todo.isComplete
+                                      ? `${style.checkbox} ${style.checkbox_active}`
+                                      : `${style.checkbox}`
+                                  }`}
+                                  style={
+                                    Theme == "light"
+                                      ? {
+                                          border:
+                                            " 1px solid hsl(237, 14%, 26%)",
+                                        }
+                                      : {
+                                          border:
+                                            " 1px solid hsl(233, 11%, 84%)",
+                                        }
+                                  }
+                                  onClick={(e) => handleCheckbox(e, index)}
+                                >
+                                  {todo.isComplete && (
+                                    <Image src={check} alt="check" />
+                                  )}
+                                </div>
+                                <span
+                                  className={`${
+                                    todo.isComplete
+                                      ? `${style.todo_text} ${style.complete}`
+                                      : `${style.todo_text}`
+                                  }`}
+                                  style={
+                                    Theme == "light"
+                                      ? { color: "hsl(236, 33%, 92%)" }
+                                      : { color: "hsl(235, 19%, 35%)" }
+                                  }
+                                >
+                                  {todo.text}
+                                </span>
+                              </div>
+                              <Image
+                                className={style.close_Btn}
+                                src={close}
+                                alt="close"
+                                onClick={(e) => handleClose(e, index)}
+                              />
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </>
+                  )}
 
-            <div className={style.items_info}>
-              <div className="left" 
-              style={
-                Theme == "light"
-                  ? { color:'hsl(234, 11%, 52%)' }
-                  : { color:'hsl(236, 9%, 61%)' }
-              }
-              >
-                <span >{Todos.length}</span> items left
-              </div>
-              <span className={style.right} onClick={clearCompleted} style={
-                Theme == "light"
-                  ? { color:'hsl(234, 11%, 52%)' }
-                  : { color:'hsl(236, 9%, 61%)' }
-              }>
-                Clear Completed
-              </span>
-            </div>
-          </Box>
+                  <div className={style.items_info}>
+                    <div
+                      className="left"
+                      style={
+                        Theme == "light"
+                          ? { color: "hsl(234, 11%, 52%)" }
+                          : { color: "hsl(236, 9%, 61%)" }
+                      }
+                    >
+                      <span>{Todos.length}</span> items left
+                    </div>
+                    <span
+                      className={style.right}
+                      onClick={clearCompleted}
+                      style={
+                        Theme == "light"
+                          ? { color: "hsl(234, 11%, 52%)" }
+                          : { color: "hsl(236, 9%, 61%)" }
+                      }
+                    >
+                      Clear Completed
+                    </span>
+                  </div>
+                </Box>
+              )}
+            </Droppable>
+          </DragDropContext>
           {/* TodosMenu Tabs  */}
           <Stack
             className={style.todo_menu}
@@ -390,7 +457,7 @@ export default function Home() {
               background: "#fafafa",
               padding: "1.2rem 1.5rem",
               marginTop: "1rem",
-              borderRadius: "5px",              
+              borderRadius: "5px",
             }}
             style={
               Theme == "light"
@@ -403,8 +470,8 @@ export default function Home() {
               onClick={handleTodos}
               style={
                 Theme == "light"
-                  ? { color:'hsl(234, 11%, 52%)' }
-                  : { color:'hsl(236, 9%, 61%)' }
+                  ? { color: "hsl(234, 11%, 52%)" }
+                  : { color: "hsl(236, 9%, 61%)" }
               }
             >
               All
@@ -415,8 +482,8 @@ export default function Home() {
               }`}
               style={
                 Theme == "light"
-                  ? { color:'hsl(234, 11%, 52%)' }
-                  : { color:'hsl(236, 9%, 61%)' }
+                  ? { color: "hsl(234, 11%, 52%)" }
+                  : { color: "hsl(236, 9%, 61%)" }
               }
               onClick={handleActive}
             >
@@ -428,8 +495,8 @@ export default function Home() {
               }`}
               style={
                 Theme == "light"
-                  ? { color:'hsl(234, 11%, 52%)' }
-                  : { color:'hsl(236, 9%, 61%)' }
+                  ? { color: "hsl(234, 11%, 52%)" }
+                  : { color: "hsl(236, 9%, 61%)" }
               }
               onClick={handleCompleted}
             >
