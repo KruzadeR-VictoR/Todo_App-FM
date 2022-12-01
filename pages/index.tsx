@@ -5,7 +5,9 @@ import style from "../styles/index.module.css";
 import moon from "../public/icon-moon.svg";
 import sun from "../public/icon-sun.svg";
 import bgLightMobile from "../public/bg-mobile-light.jpg";
+import bgDarkMobile from "../public/bg-mobile-dark.jpg";
 import bgLightDesktop from "../public/bg-desktop-light.jpg";
+import bgDarkDesktop from "../public/bg-desktop-dark.jpg";
 import check from "../public/icon-check.svg";
 import close from "../public/icon-cross.svg";
 import Stack from "@mui/material/Stack";
@@ -192,7 +194,15 @@ export default function Home() {
   return (
     <>
       <Image
-        src={Screen && Screen <= 600 ? bgLightMobile : bgLightDesktop}
+        src={
+          Screen && Screen <= 600
+            ? Theme && Theme == "light"
+              ? bgLightMobile
+              : bgDarkMobile
+            : Theme && Theme == "dark"
+            ? bgLightDesktop
+            : bgDarkDesktop
+        }
         alt="bg-light"
         style={{
           width: "100%",
