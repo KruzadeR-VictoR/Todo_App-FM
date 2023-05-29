@@ -26,7 +26,7 @@ import {
   resetServerContext,
 } from "react-beautiful-dnd";
 import { db } from "../firebase";
-import { query, collection, onSnapshot,doc } from "firebase/firestore";
+import { query, collection, onSnapshot, doc } from "firebase/firestore";
 
 // type Todo = {
 //   id: number;
@@ -38,11 +38,10 @@ export default function Home() {
   const { Theme, setTheme } = useContext(ThemeContext);
   const [isActive, setisActive] = useState(false);
   const [Active, setActive] = useState("All");
-  const [CompletedTodos, setCompletedTodos] = useState([])
-  const [ActiveTodos, setActiveTodos] = useState([])  
+  const [CompletedTodos, setCompletedTodos] = useState([]);
+  const [ActiveTodos, setActiveTodos] = useState([]);
   const [Screen, setScreen] = useState<number>();
   const [Todos, setTodos] = useState<any[]>([]);
-  
 
   const [Current, setCurrent] = useState([]);
 
@@ -53,7 +52,7 @@ export default function Home() {
   useEffect(() => {
     const q = query(collection(db, "Todos"));
     const getData = onSnapshot(q, (querySnapshot) => {
-      let todoArr:any = [];
+      let todoArr: any = [];
       querySnapshot.forEach((doc) => {
         todoArr.push({ ...doc.data(), id: doc.id });
       });
@@ -72,15 +71,15 @@ export default function Home() {
   // const handleCheckbox = (e: any, index: any) => {
   //   setisActive((prev) => !prev);
   //   console.log(Todos);
-    // setisComplete(prev=>!prev)
-    // Todos[index].isComplete
-    //   ? (Todos[index].isComplete = false)
-    //   : (Todos[index].isComplete = true);
-    // Todos.splice(index, 1);
-    // const complete = Todos.filter((item) => {
-    //   return item.isComplete == true;
-    // });
-    // setCompletedTodos(complete);
+  // setisComplete(prev=>!prev)
+  // Todos[index].isComplete
+  //   ? (Todos[index].isComplete = false)
+  //   : (Todos[index].isComplete = true);
+  // Todos.splice(index, 1);
+  // const complete = Todos.filter((item) => {
+  //   return item.isComplete == true;
+  // });
+  // setCompletedTodos(complete);
   // };
 
   const handleClose = (e: any, index: any) => {
@@ -100,16 +99,11 @@ export default function Home() {
     setCompletedTodos(CompletedTodos);
   }, [CompletedTodos]);
 
- 
   //> handle Active Todos
-  
 
   //> Clear Completed todos
 
-  
-
   // Create a Todo Input
-  
 
   //< handle Theme change
 
@@ -132,12 +126,12 @@ export default function Home() {
     setTodos(items);
   };
 
-  const styles={
-     //< Utility
-     utility: "flex justify-between items-center px-2 pt-5",
-     leftText: "text-sm text-gray-400",
-     clearBtn: " text-sm text-gray-400",
-  }
+  const styles = {
+    //< Utility
+    utility: "flex justify-between items-center px-2 pt-5",
+    leftText: "text-sm text-gray-400",
+    clearBtn: " text-sm text-gray-400",
+  };
 
   return (
     <>
@@ -220,7 +214,7 @@ export default function Home() {
             <input
               className={style.createInput}
               type="text"
-              placeholder="Create a new todo..."              
+              placeholder="Create a new todo..."
               style={
                 Theme == "light"
                   ? {
@@ -298,38 +292,40 @@ export default function Home() {
             ))} */}
             {/* All Todos  */}
             <div className={style.todos}>
-          {Todos.map((todo, index) => (
-            <div className={style.todo} key={index}>
-              <div className={style.todo_left}>
-                <input
-                  type="checkbox"
-                  name="complete"
-                  id="checkComplete"
-                  // onChange={() => toggleCompleted(todo)}
-                  checked={todo.isComplete ? true : false}
-                  className="w-[1.3rem] aspect-square"
-                />
-                <span
-                  className={
-                    todo.isComplete ? style.todo_text : style.complete
-                  }
-                >
-                  {todo.text}
+              {Todos.map((todo, index) => (
+                <div className={style.todo} key={index}>
+                  <div className={style.todo_left}>
+                    <input
+                      type="checkbox"
+                      name="complete"
+                      id="checkComplete"
+                      // onChange={() => toggleCompleted(todo)}
+                      checked={todo.isComplete ? true : false}
+                      className="w-[1.3rem] aspect-square"
+                    />
+                    <span
+                      className={
+                        todo.isComplete ? style.todo_text : style.complete
+                      }
+                    >
+                      {todo.text}
+                    </span>
+                  </div>
+                  <img
+                    src="../public/icon-cross.svg"
+                    alt="delete todo"
+                    className={style.deleteBtn}
+                    // onClick={() => deleteTodo(todo.id)}
+                  />
+                </div>
+              ))}
+              <div className={style.utility}>
+                <span className={style.leftText}>
+                  {Todos.length} items left
                 </span>
+                <button className={style.clearBtn}>Clear Completed</button>
               </div>
-              <img
-                src="../public/icon-cross.svg"
-                alt="delete todo"
-                className={style.deleteBtn}
-                // onClick={() => deleteTodo(todo.id)}
-              />
             </div>
-          ))}
-          <div className={style.utility}>
-            <span className={style.leftText}>{Todos.length} items left</span>
-            <button className={style.clearBtn}>Clear Completed</button>
-          </div>
-        </div>            
           </Box>
           {/* TodosMenu Tabs  */}
           <Stack
@@ -350,7 +346,7 @@ export default function Home() {
             }
           >
             <span
-              className={`${Active == "All" ? `${style.link_active}` : ""}`}              
+              className={`${Active == "All" ? `${style.link_active}` : ""}`}
               style={
                 Theme == "light"
                   ? { color: "hsl(234, 11%, 52%)" }
@@ -360,14 +356,12 @@ export default function Home() {
               All
             </span>
             <span
-              className={`${
-                Active == "Active" ? `${style.link_active}` : ""
-              }`}
+              className={`${Active == "Active" ? `${style.link_active}` : ""}`}
               style={
                 Theme == "light"
                   ? { color: "hsl(234, 11%, 52%)" }
                   : { color: "hsl(236, 9%, 61%)" }
-              }              
+              }
             >
               Active
             </span>
@@ -379,7 +373,7 @@ export default function Home() {
                 Theme == "light"
                   ? { color: "hsl(234, 11%, 52%)" }
                   : { color: "hsl(236, 9%, 61%)" }
-              }              
+              }
             >
               Completed
             </span>
