@@ -25,18 +25,29 @@ import {
   Droppable,
   resetServerContext,
 } from "react-beautiful-dnd";
-import { db } from "../firebase";
-import { query, collection, onSnapshot, doc } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  onSnapshot,
+  query,
+  updateDoc,
+} from "firebase/firestore";
+import { db } from "./firebase";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-// type Todo = {
-//   id: number;
-//   text: string;
-//   isComplete: boolean;
-// };
+type Todo = {
+  id: number;
+  text: string;
+  isComplete: boolean;
+};
 
 export default function Home() {
   const { Theme, setTheme } = useContext(ThemeContext);
   const [isActive, setisActive] = useState(false);
+  const [TodoMenu, setTodoMenu] = useState("All");
   const [Active, setActive] = useState("All");
   const [CompletedTodos, setCompletedTodos] = useState([]);
   const [ActiveTodos, setActiveTodos] = useState([]);
@@ -49,17 +60,29 @@ export default function Home() {
 
   const todoref = useRef();
 
-  useEffect(() => {
-    const q = query(collection(db, "Todos"));
-    const getData = onSnapshot(q, (querySnapshot) => {
+  const getTodos = async () => {
+    try {
+      const q = query(collection(db, "Todos"));
+      const querySnapshot = await getDocs(q);
+
       let todoArr: any = [];
       querySnapshot.forEach((doc) => {
         todoArr.push({ ...doc.data(), id: doc.id });
       });
-      setTodos(todoArr);
-      console.log(todoArr);
-    });
-  }, []);
+
+      return todoArr;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  };
+
+  const { data, isLoading } = useQuery(["todos"], () => getTodos(), {
+    refetchOnWindowFocus: false,
+    onSuccess: (data) => {
+      setTodos(data);
+    },
+  });
 
   useEffect(() => {
     resetServerContext();
@@ -68,43 +91,126 @@ export default function Home() {
     });
   }, []);
 
-  // const handleCheckbox = (e: any, index: any) => {
-  //   setisActive((prev) => !prev);
-  //   console.log(Todos);
-  // setisComplete(prev=>!prev)
-  // Todos[index].isComplete
-  //   ? (Todos[index].isComplete = false)
-  //   : (Todos[index].isComplete = true);
-  // Todos.splice(index, 1);
-  // const complete = Todos.filter((item) => {
-  //   return item.isComplete == true;
-  // });
-  // setCompletedTodos(complete);
-  // };
-
-  const handleClose = (e: any, index: any) => {
-    setisActive((prev) => !prev);
-    console.log(index);
-    Todos.splice(index, 1);
+  const updateExistingTodo = async (updateParams: any) => {
+    // setisActive((prev) => !prev);
+    // console.log(Todos);
+    // // setisComplete(prev=>!prev)
+    // Todos[index].isComplete
+    //   ? (Todos[index].isComplete = false)
+    //   : (Todos[index].isComplete = true);
+    // // Todos.splice(index, 1);
+    // const complete = Todos.filter((item: any) => {
+    //   return item.isComplete == true;
+    // });
+    // setCompletedTodos(complete);
+    const { id, isComplete } = updateParams;
+    const todoDoc = doc(db, "Todos", id);
+    const isCompleted = { isComplete: !isComplete };
+    // console.log(id,isComplete);
+    await updateDoc(todoDoc, isCompleted);
   };
 
-  // //> handle All Todos
-  // const handleTodos = () => {
-  //   setTodoMenu("All");
-  //   setCurrent(Todos);
-  // };
+  //> Delete Todo
+  const deleteExistingTodo = async (id: any) => {
+    await deleteDoc(doc(db, "Todos", id));
+  };
+
+  //> handle All Todos
+  const handleTodos = () => {
+    setTodoMenu("All");
+    const all_Todos = data.filter((todo: any) => {
+      return todo.text;
+    });
+    console.log(data);
+    setTodos(all_Todos);
+  };
   //> handle Completed Todos
-
-  useEffect(() => {
-    setCompletedTodos(CompletedTodos);
-  }, [CompletedTodos]);
-
+  const handleCompleted = () => {
+    setTodoMenu("Completed");
+    const complete = data.filter((todo: any) => {
+      return todo.isComplete == true;
+    });
+    setTodos(complete);
+  };
   //> handle Active Todos
+  const handleActive = () => {
+    setTodoMenu("Active");
 
+    const activeArr = data.filter((todo: any) => {
+      return todo.isComplete != true;
+    });
+
+    setTodos(activeArr);
+  };
   //> Clear Completed todos
 
-  // Create a Todo Input
+  const clearCompleted = async () => {
+    const completedTodos = data.filter((todo: any) => {
+      return todo.isComplete == true;
+    });
 
+    completedTodos.map(async (todo: any) => {
+      await deleteDoc(doc(db, "Todos", todo.id));
+    });
+  };
+
+  //> Create a Todo Input
+  const createTodo = async (newTodo: any) => {
+    await addDoc(collection(db, "Todos"), newTodo);
+  };
+
+  //| Mutations
+
+  const queryClient = useQueryClient();
+
+  //> create mutation
+  const addTodo = useMutation(createTodo, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(["todos"]);
+    },
+  });
+  //> Delete mutation
+  const deleteTodo = useMutation(deleteExistingTodo, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(["todos"]);
+    },
+  });
+  //> Update mutation
+
+  const updateTodo = useMutation(updateExistingTodo, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(["todos"]);
+    },
+  });
+
+  //> clear Completed
+
+  const clearCompletedTodos = useMutation(clearCompleted, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(["todos"]);
+    },
+  });
+
+  const handleInput = (e: any) => {
+    if (e.key == "Enter" && e.target.value !== "") {
+      const newTodo = {
+        text: e.target.value,
+        isComplete: false,
+      };
+      addTodo.mutate(newTodo);
+      e.target.value = "";
+    }
+  };
+  const handleDelete = (id: any) => {
+    deleteTodo.mutate(id);
+  };
+  const handleUpdate = (id: any, isComplete: boolean) => {
+    updateTodo.mutate({ id, isComplete });
+  };
+
+  const handleclearCompleted = () => {
+    clearCompletedTodos.mutate();
+  };
   //< handle Theme change
 
   const handleTheme = () => {
@@ -118,12 +224,13 @@ export default function Home() {
   //> handle DragEnd
 
   const handleDragEnd = (result: any) => {
-    console.log(result);
     if (!result.destination) return;
+
     const items = Array.from(Todos);
-    const [reorderData] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderData);
-    setTodos(items);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setTodos(items); // Update the state with the sorted array
   };
 
   const styles = {
@@ -215,6 +322,7 @@ export default function Home() {
               className={style.createInput}
               type="text"
               placeholder="Create a new todo..."
+              onKeyUp={(e) => handleInput(e)}
               style={
                 Theme == "light"
                   ? {
@@ -226,107 +334,146 @@ export default function Home() {
             />
           </Stack>
           {/* All Todos  */}
-          <Box
-            className={style.todos}
-            style={
-              Theme == "light"
-                ? { background: "hsl(235, 24%, 19%)" }
-                : { background: "rgb(250, 250, 250)" }
-            }
-          >
-            {/* {Current.map((todo, index) => (
-              <div
-                className={style.todo}
-                style={
-                  Theme == "light"
-                    ? {
-                        borderBottom: " 1px solid hsl(237, 14%, 26%)",
-                      }
-                    : {
-                        borderBottom: " 1px solid hsl(236, 33%, 92%)",
-                      }
-                }
-              >
-                <div className={style.todo_left}>
-                  <div
-                    className={`${
-                      todo.isComplete
-                        ? `${style.checkbox} ${style.checkbox_active}`
-                        : `${style.checkbox}`
-                    }`}
-                    style={
-                      Theme == "light"
-                        ? {
-                            border: " 1px solid hsl(237, 14%, 26%)",
-                          }
-                        : {
-                            border: " 1px solid hsl(233, 11%, 84%)",
-                          }
-                    }
-                    onClick={(e) => handleCheckbox(e, index)}
-                  >
-                    {todo.isComplete && <Image src={check} alt="check" />}
-                  </div>
-                  <span
-                    className={`${
-                      todo.isComplete
-                        ? `${style.todo_text} ${style.complete}`
-                        : `${style.todo_text}`
-                    }`}
-                    style={
-                      Theme == "light"
-                        ? { color: "hsl(236, 33%, 92%)" }
-                        : { color: "hsl(235, 19%, 35%)" }
-                    }
-                  >
-                    {todo.text}
-                  </span>
-                </div>
-                <Image
-                  className={style.close_Btn}
-                  src={close}
-                  alt="close"
-                  onClick={(e) => handleClose(e, index)}
-                />
-              </div>
-            ))} */}
-            {/* All Todos  */}
-            <div className={style.todos}>
-              {Todos.map((todo, index) => (
-                <div className={style.todo} key={index}>
-                  <div className={style.todo_left}>
-                    <input
-                      type="checkbox"
-                      name="complete"
-                      id="checkComplete"
-                      // onChange={() => toggleCompleted(todo)}
-                      checked={todo.isComplete ? true : false}
-                      className="w-[1.3rem] aspect-square"
-                    />
-                    <span
-                      className={
-                        todo.isComplete ? style.todo_text : style.complete
+          {isLoading ? (
+            "Loading"
+          ) : (
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="droppable">
+                {(provided) => (
+                  <>
+                    <Box
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      className={style.todos}
+                      style={
+                        Theme == "light"
+                          ? {
+                              background: "hsl(235, 24%, 19%)",
+                              maxHeight: "30rem",
+                              overflowY: "scroll",
+                            }
+                          : {
+                              background: "rgb(250, 250, 250)",
+                              maxHeight: "30rem",
+                              overflowY: "scroll",
+                            }
                       }
                     >
-                      {todo.text}
-                    </span>
-                  </div>
-                  <img
-                    src="../public/icon-cross.svg"
-                    alt="delete todo"
-                    className={style.deleteBtn}
-                    // onClick={() => deleteTodo(todo.id)}
-                  />
-                </div>
-              ))}
-              <div className={style.utility}>
-                <span className={style.leftText}>
-                  {Todos.length} items left
-                </span>
-                <button className={style.clearBtn}>Clear Completed</button>
-              </div>
-            </div>
-          </Box>
+                      <>
+                        {Todos &&
+                          Todos.map((todo: any, index: number) => (
+                            <Draggable
+                              key={todo.id}
+                              draggableId={todo.id.toString()}
+                              index={index}
+                            >
+                              {(provided) => (
+                                <Box
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  ref={provided.innerRef}
+                                  className={style.todo}
+                                  sx={
+                                    Theme == "light"
+                                      ? {
+                                          borderBottom:
+                                            " 1px solid hsl(237, 14%, 26%)",
+                                        }
+                                      : {
+                                          borderBottom:
+                                            " 1px solid hsl(236, 33%, 92%)",
+                                        }
+                                  }
+                                >
+                                  <div className={style.todo_left}>
+                                    <div
+                                      className={`${
+                                        todo.isComplete
+                                          ? `${style.checkbox} ${style.checkbox_active}`
+                                          : `${style.checkbox}`
+                                      }`}
+                                      style={
+                                        Theme == "light"
+                                          ? {
+                                              border:
+                                                " 1px solid hsl(237, 14%, 26%)",
+                                            }
+                                          : {
+                                              border:
+                                                " 1px solid hsl(233, 11%, 84%)",
+                                            }
+                                      }
+                                      onClick={() =>
+                                        handleUpdate(todo.id, todo.isComplete)
+                                      }
+                                    >
+                                      {todo.isComplete && (
+                                        <Image src={check} alt="check" />
+                                      )}
+                                    </div>
+                                    <span
+                                      className={`${
+                                        todo.isComplete
+                                          ? `${style.todo_text} ${style.complete}`
+                                          : `${style.todo_text}`
+                                      }`}
+                                      style={
+                                        Theme == "light"
+                                          ? { color: "hsl(236, 33%, 92%)" }
+                                          : { color: "hsl(235, 19%, 35%)" }
+                                      }
+                                    >
+                                      {todo.text}
+                                    </span>
+                                  </div>
+                                  <Image
+                                    className={style.close_Btn}
+                                    src={close}
+                                    alt="close"
+                                    onClick={() => handleDelete(todo.id)}
+                                  />
+                                </Box>
+                              )}
+                            </Draggable>
+                          ))}
+                        {provided.placeholder}
+                      </>
+                    </Box>
+                    <div
+                      className={style.items_info}
+                      style={
+                        Theme == "light"
+                          ? { backgroundColor: "hsl(235,24%,19%)" }
+                          : { backgroundColor: "hsl(0,0%,98%)" }
+                      }
+                    >
+                      <div
+                        className="left"
+                        style={
+                          Theme == "light"
+                            ? { color: "hsl(234, 11%, 52%)" }
+                            : { color: "hsl(236, 9%, 61%)" }
+                        }
+                      >
+                        <span>{Todos.length}</span> items left
+                      </div>
+                      <span
+                        className={style.right}
+                        onClick={handleclearCompleted}
+                        style={
+                          Theme == "light"
+                            ? { color: "hsl(234, 11%, 52%)" }
+                            : { color: "hsl(236, 9%, 61%)" }
+                        }
+                      >
+                        Clear Completed
+                      </span>
+                    </div>
+                  </>
+                )}
+              </Droppable>
+            </DragDropContext>
+          )}
           {/* TodosMenu Tabs  */}
           <Stack
             className={style.todo_menu}
@@ -346,7 +493,8 @@ export default function Home() {
             }
           >
             <span
-              className={`${Active == "All" ? `${style.link_active}` : ""}`}
+              className={`${TodoMenu == "All" ? `${style.link_active}` : ""}`}
+              onClick={handleTodos}
               style={
                 Theme == "light"
                   ? { color: "hsl(234, 11%, 52%)" }
@@ -356,24 +504,28 @@ export default function Home() {
               All
             </span>
             <span
-              className={`${Active == "Active" ? `${style.link_active}` : ""}`}
-              style={
-                Theme == "light"
-                  ? { color: "hsl(234, 11%, 52%)" }
-                  : { color: "hsl(236, 9%, 61%)" }
-              }
-            >
-              Active
-            </span>
-            <span
               className={`${
-                Active == "Completed" ? `${style.link_active}` : ""
+                TodoMenu == "Active" ? `${style.link_active}` : ""
               }`}
               style={
                 Theme == "light"
                   ? { color: "hsl(234, 11%, 52%)" }
                   : { color: "hsl(236, 9%, 61%)" }
               }
+              onClick={handleActive}
+            >
+              Active
+            </span>
+            <span
+              className={`${
+                TodoMenu == "Completed" ? `${style.link_active}` : ""
+              }`}
+              style={
+                Theme == "light"
+                  ? { color: "hsl(234, 11%, 52%)" }
+                  : { color: "hsl(236, 9%, 61%)" }
+              }
+              onClick={handleCompleted}
             >
               Completed
             </span>
