@@ -5,6 +5,9 @@ import { createContext, useState } from "react";
 import { CssBaseline } from "@mui/material";
 import { Paper } from "@mui/material";
 
+import { QueryClientProvider,QueryClient } from "@tanstack/react-query";
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+
 export const ThemeContext = createContext<any>("");
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -44,13 +47,20 @@ export default function App({ Component, pageProps }: AppProps) {
           }),
     },
   });
+
+
+  const queryClient=new QueryClient()
+
   return (
     <ThemeProvider theme={darktheme}>
       <ThemeContext.Provider value={values}>
+        <QueryClientProvider client={queryClient}>
+          <ReactQueryDevtools />
         <CssBaseline />
         {/* <Paper> */}
           <Component {...pageProps} />
         {/* </Paper> */}
+        </QueryClientProvider>
       </ThemeContext.Provider>
      </ThemeProvider>
   );
