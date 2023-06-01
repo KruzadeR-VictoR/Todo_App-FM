@@ -35,7 +35,7 @@ import {
   query,
   updateDoc,
 } from "firebase/firestore";
-import { db } from "./firebase";
+import { db } from "../Components/firebase";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 type Todo = {
