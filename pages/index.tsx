@@ -1,5 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
-import Head from "next/head";
+import { useContext, useEffect, useState } from "react";
 import Image from "next/image";
 import style from "../styles/index.module.css";
 import moon from "../public/icon-moon.svg";
@@ -14,11 +13,8 @@ import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
-import Checkbox from "@mui/material/Checkbox";
-import TextField from "@mui/material/TextField";
 import { ThemeContext } from "./_app";
-import { elementAcceptingRef } from "@mui/utils";
-import { Paper } from "@mui/material";
+import { PuffLoader } from "react-spinners";
 import {
   DragDropContext,
   Draggable,
@@ -37,6 +33,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../Components/firebase";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Alert, Snackbar } from "@mui/material";
 
 type Todo = {
   id: number;
@@ -46,19 +43,10 @@ type Todo = {
 
 export default function Home() {
   const { Theme, setTheme } = useContext(ThemeContext);
-  const [isActive, setisActive] = useState(false);
   const [TodoMenu, setTodoMenu] = useState("All");
-  const [Active, setActive] = useState("All");
-  const [CompletedTodos, setCompletedTodos] = useState([]);
-  const [ActiveTodos, setActiveTodos] = useState([]);
   const [Screen, setScreen] = useState<number>();
   const [Todos, setTodos] = useState<any[]>([]);
-
-  const [Current, setCurrent] = useState([]);
-
-  // console.log(Current);
-
-  const todoref = useRef();
+  const [error, setError] = useState("");
 
   const getTodos = async () => {
     try {
@@ -72,15 +60,19 @@ export default function Home() {
 
       return todoArr;
     } catch (error) {
-      console.log(error);
-      throw error;
+      // console.log(error);
+      throw Error(`Couldn't fetch data, Try again`);
     }
   };
 
-  const { data, isLoading } = useQuery(["todos"], () => getTodos(), {
+  //| Queries
+  const { data, isLoading, isError } = useQuery(["todos"], () => getTodos(), {
     refetchOnWindowFocus: false,
     onSuccess: (data) => {
       setTodos(data);
+    },
+    onError: (err: any) => {
+      setError(err.message);
     },
   });
 
@@ -92,17 +84,6 @@ export default function Home() {
   }, []);
 
   const updateExistingTodo = async (updateParams: any) => {
-    // setisActive((prev) => !prev);
-    // console.log(Todos);
-    // // setisComplete(prev=>!prev)
-    // Todos[index].isComplete
-    //   ? (Todos[index].isComplete = false)
-    //   : (Todos[index].isComplete = true);
-    // // Todos.splice(index, 1);
-    // const complete = Todos.filter((item: any) => {
-    //   return item.isComplete == true;
-    // });
-    // setCompletedTodos(complete);
     const { id, isComplete } = updateParams;
     const todoDoc = doc(db, "Todos", id);
     const isCompleted = { isComplete: !isComplete };
@@ -121,7 +102,7 @@ export default function Home() {
     const all_Todos = data.filter((todo: any) => {
       return todo.text;
     });
-    console.log(data);
+    // console.log(data);
     setTodos(all_Todos);
   };
   //> handle Completed Todos
@@ -240,6 +221,35 @@ export default function Home() {
     clearBtn: " text-sm text-gray-400",
   };
 
+  //> if any Error
+  const [open, setOpen] = useState(false);
+
+  const handleClick = () => {
+    setOpen(true);
+  };
+
+  const handleClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setOpen(false);
+  };
+
+  if (isError) {
+    return (
+      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+        <Alert onClose={handleClose} severity="success" sx={{ width: "100%" }}>
+          {error}
+        </Alert>
+      </Snackbar>
+      // console.log(error)
+    );
+  }
+
   return (
     <>
       <Image
@@ -335,7 +345,17 @@ export default function Home() {
           </Stack>
           {/* All Todos  */}
           {isLoading ? (
-            "Loading"
+            <Box
+              sx={{
+                bgcolor: "hsl(235,24%,19%)",
+                marginTop: "2rem",
+                padding: "2rem",
+                display: "grid",
+                placeContent: "center",
+              }}
+            >
+              <PuffLoader color="hsl(299,63%,28%)" />
+            </Box>
           ) : (
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="droppable">
